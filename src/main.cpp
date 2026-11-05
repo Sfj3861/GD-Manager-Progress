@@ -166,9 +166,9 @@ class $modify(GMPPlayLayer, PlayLayer) {
 
     void resetLevel() {
         PlayLayer::resetLevel();
-        // A reset starts a new attempt. Keep only the inputs from the attempt
-        // that eventually completes the level.
-        gmp::begin(this);
+        // Preserve replay-playback state while resetting the captured attempt.
+        bool replayPlayback = gmp::recorder().replayPlayback;
+        gmp::begin(this, replayPlayback);
     }
 
     void levelComplete() {
