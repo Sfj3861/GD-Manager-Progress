@@ -5,22 +5,31 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+
 jobs:
   build:
-    name: Build (${{ matrix.platform }})
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows, android]
+        include:
+          - platform: windows
+            runner: windows-latest
+            target: Win64
+          - platform: android
+            runner: ubuntu-latest
+            target: Android64
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - name: Build Geode mod
+        id: geode-build
         uses: geode-sdk/build-geode-mod@main
         with:
-          platform: ${{ matrix.platform }}
-      - uses: actions/upload-artifact@v4
+          target: ${{ matrix.target }}
+      - name: Upload package
+        uses: actions/upload-artifact@v4
         with:
           name: GD-Manager-Progress-${{ matrix.platform }}
-          path: "*.geode"
+          path: ${{ steps.geode-build.outputs.build-output }}/*.geode
           if-no-files-found: error
