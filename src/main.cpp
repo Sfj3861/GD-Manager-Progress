@@ -162,8 +162,8 @@ class $modify(GMPInputCapture, GJBaseGameLayer) {
 };
 
 class $modify(GMPPlayLayer, PlayLayer) {
-    bool init(GJGameLevel* level, bool dontCreateObjects) {
-        if (!PlayLayer::init(level, dontCreateObjects)) return false;
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
         gmp::begin(this);
         return true;
     }
