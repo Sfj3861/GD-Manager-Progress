@@ -4,10 +4,9 @@
 #include <Geode/modify/PlayLayer.hpp>
 
 #include <algorithm>
-#include <cctype>
 #include <chrono>
+#include <cstdint>
 #include <fstream>
-#include <iomanip>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -29,6 +28,7 @@ namespace gmp {
         int attempt = 0;
         bool practice = false;
         bool testMode = false;
+        bool replayPlayback = false;
         bool active = false;
         std::vector<InputEvent> events;
     };
@@ -55,22 +55,13 @@ namespace gmp {
         return out.str();
     }
 
-    static std::string safeName(std::string value) {
-        for (auto& c : value) {
-            if (!(std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_'))
-                c = '_';
-        }
-        if (value.empty()) value = "level";
-        return value;
-    }
-
     static int currentFrame(GJBaseGameLayer* layer) {
         if (!layer) return 0;
         // Geometry Dash's game-state progress advances by two units per frame.
         return std::max(0, static_cast<int>(layer->m_gameState.m_currentProgress) / 2);
     }
 
-    static void begin(PlayLayer* layer) {
+    static void begin(PlayLayer* layer, bool replayPlayback = false) {
         auto& r = recorder();
         r = Recorder{};
         if (!layer || !layer->m_level) return;
@@ -82,13 +73,14 @@ namespace gmp {
         r.startPercent = std::clamp(layer->getCurrentPercentInt(), 0, 100);
         r.practice = layer->m_isPracticeMode;
         r.testMode = layer->m_isTestMode;
+        r.replayPlayback = replayPlayback;
         r.active = true;
         r.attempt = layer->m_attempts;
     }
 
     static void recordInput(GJBaseGameLayer* layer, bool down, int button, bool player2) {
         auto& r = recorder();
-        if (!r.active || !layer) return;
+        if (!r.active || r.replayPlayback || !layer) return;
         auto* play = PlayLayer::get();
         if (!play || static_cast<GJBaseGameLayer*>(play) != layer) return;
         if (play->m_isPaused || play->m_hasCompletedLevel) return;
@@ -97,7 +89,7 @@ namespace gmp {
 
     static bool writeReplay() {
         auto& r = recorder();
-        if (!r.active || r.levelID <= 0) return false;
+        if (!r.active || r.replayPlayback || r.levelID <= 0) return false;
 
         auto dir = Mod::get()->getSaveDir() / "replays";
         if (auto err = utils::file::createDirectoryAll(dir); err.isErr()) {
@@ -108,7 +100,11 @@ namespace gmp {
         auto now = std::chrono::system_clock::now();
         auto stamp = std::chrono::duration_cast<std::chrono::seconds>(
             now.time_since_epoch()).count();
-        auto filename = std::to_string(r.levelID) + "_" + std::to_string(stamp) + ".gdr2";
+        auto stampMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()).count();
+        static std::uint64_t sequence = 0;
+        auto filename = std::to_string(r.levelID) + "_" + std::to_string(stampMs)
+            + "_" + std::to_string(++sequence) + ".gdr2";
         auto path = dir / filename;
 
         std::ostringstream out;
@@ -164,7 +160,7 @@ class $modify(GMPInputCapture, GJBaseGameLayer) {
 class $modify(GMPPlayLayer, PlayLayer) {
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
-        gmp::begin(this);
+        gmp::begin(this, useReplay);
         return true;
     }
 
@@ -177,11 +173,8 @@ class $modify(GMPPlayLayer, PlayLayer) {
 
     void levelComplete() {
         auto& r = gmp::recorder();
-        if (r.active && !m_isPracticeMode && !m_isTestMode) {
-            gmp::writeReplay();
-        } else if (r.active) {
-            // Practice/editor completions are still exportable, but never treated
-            // as legitimate completions.
+        if (r.active && !r.replayPlayback) {
+            // Practice/editor completions are exportable, but always remain unverified.
             gmp::writeReplay();
         }
         PlayLayer::levelComplete();
@@ -208,9 +201,10 @@ protected:
         m_mainLayer->addChild(title);
 
         auto info = CCLabelBMFont::create(
-            "Run categories\nFrom Zero / Startpos\nNoclip Death / Noclip Accuracy / Speedhack\n\n"
-            "Completed replays are exported as .gdr2\nIntegrity: Unverified by default\n"
-            "Unknown modifications are never marked legitimate",
+            "Input capture: basic event recording\nRun categories: not auto-detected\n"
+            "Startpos / Noclip / Speedhack: unverified\n\n"
+            "Completed runs export as .gdr2\nReplay playback is excluded\n"
+            "Integrity: always unverified",
             "goldFont.fnt");
         info->setAlignment(kCCTextAlignmentCenter);
         info->setScale(0.38f);
