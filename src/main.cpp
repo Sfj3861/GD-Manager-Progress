@@ -3,6 +3,8 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <fstream>
 #include <iomanip>
@@ -76,7 +78,7 @@ namespace gmp {
         r.levelID = layer->m_level->m_levelID.value();
         if (r.levelID <= 0) return;
 
-        r.levelName = layer->m_level->m_levelName;
+        r.levelName = layer->m_level->m_levelName.c_str();
         r.startPercent = std::clamp(layer->getCurrentPercentInt(), 0, 100);
         r.practice = layer->m_isPracticeMode;
         r.testMode = layer->m_isTestMode;
@@ -216,7 +218,7 @@ protected:
         m_mainLayer->addChild(info);
 
         auto hint = CCLabelBMFont::create(
-            "Saved in Geode save folder / GD Manager Progress / replays",
+            "Saved in this mod’s Geode save folder / replays",
             "chatFont.fnt");
         hint->setScale(0.34f);
         hint->setPosition({150.f, 27.f});
