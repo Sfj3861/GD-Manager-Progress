@@ -1,0 +1,26 @@
+name: Build Geode mod
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows, android]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Geode mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          platform: ${{ matrix.platform }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GD-Manager-Progress-${{ matrix.platform }}
+          path: "*.geode"
+          if-no-files-found: error
