@@ -30,6 +30,12 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         with:
           target: ${{ matrix.target }}
+      - name: Verify packaged Geometry Dash version
+        env:
+          EXPECTED_GD_VERSION: "2.2081"
+          PLATFORM_KEY: ${{ matrix.platform == 'windows' && 'win' || 'android' }}
+        run: python .github/scripts/verify_geode_package.py "${{ steps.geode-build.outputs.build-output }}" "$env:PLATFORM_KEY" "$env:EXPECTED_GD_VERSION"
+        shell: pwsh
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
