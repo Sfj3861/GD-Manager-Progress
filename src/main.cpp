@@ -5,7 +5,7 @@ namespace {
 class ProgressPanel final : public FLAlertLayer {
 protected:
  bool initForLevel(GJGameLevel* level) {
-  if (!FLAlertLayer::init(300.f, 190.f, "GD Manager Progress", "GD Manager Progress", "Close", nullptr, 300.f)) return false;
+  if (!FLAlertLayer::init(nullptr, "GD Manager Progress", "", "Close", nullptr, 300.f, false, 190.f, 1.f)) return false;
   auto title = CCLabelBMFont::create(level ? level->m_levelName.c_str() : "Selected level", "bigFont.fnt");
   title->setScale(0.45f); title->setPosition({150.f,145.f}); m_mainLayer->addChild(title);
   auto info = CCLabelBMFont::create("From Zero / Startpos\nNoclip: Death / Accuracy\nSpeedhack: separate category\n\nReplay integrity: not verified", "goldFont.fnt");
