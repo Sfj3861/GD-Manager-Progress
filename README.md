@@ -1,37 +1,31 @@
 # GD Manager Progress
 
-A native Geode mod for Geometry Dash.
+Native Geode mod for Geometry Dash 2.2081 (Android 64-bit and Windows).
 
-## Implemented
+## Current functionality
 
-- Adds an entry arrow to the Level Info screen. The progress panel is not placed in the pause menu.
-- Hooks gameplay input events and records both button presses and releases, including the player slot and game frame.
-- Starts a fresh input buffer when an attempt is reset, so the exported replay contains the attempt that reached completion.
-- Exports a replay file when a level completion occurs. Practice/editor state is recorded in the export metadata and is never promoted to a legitimate record.
-- Appends a compact completion index to the mod's save directory.
+- Adds a left-arrow entry point to the Level Info screen.
+- Captures gameplay button press and release events, including button ID and player slot.
+- Resets the event buffer for a new attempt and excludes replay playback.
+- Exports a JSON event file with the `.gdr2` extension when the game reports level completion.
+- Records practice/test flags, attempt number, starting percentage, completion timestamp, and an estimated end frame.
+- Appends a CSV completion index in the mod's Geode save directory.
+- Caps a single attempt at 250,000 captured input events. If the cap is reached, the export records the number of omitted events and marks the capture as truncated.
 
-## Replay export format
+## Important limitations
 
-Files use the `.gdr2` extension and contain JSON with the `GDR2` format marker, schema version, level metadata, mode flags, integrity status, and an ordered input-event array.
+- **All exports are marked `unverified`.** The mod does not prove that a run is legitimate.
+- It does not comprehensively detect Mega Hack, QOLMod, Eclipse, external tools, memory edits, noclip, speedhack, or startpos manipulation.
+- Merely having another mod installed is not evidence that a run was modified.
+- From Zero / Startpos / Noclip Death / Noclip Accuracy / Speedhack classification is not yet implemented.
+- The `.gdr2` file is this mod's own JSON event-export schema. Compatibility with third-party replay players or an external GDR2 specification has not been established.
+- The end-frame value is an estimate derived from the game's progress state; it should not be treated as a verified frame-perfect timeline.
+- In-game behavior still needs testing on actual Geometry Dash installations and devices.
 
-**Compatibility note:** this is currently GD Manager Progress' own documented event-export schema. Compatibility with third-party GDR2 readers or a separate established GDR2 specification has not been verified. Do not treat these files as interchangeable with other replay formats until that compatibility is tested.
+## Export location
 
-Each event stores:
-- `frame`: game frame at which the event was observed
-- `button`: Geometry Dash input button identifier
-- `player2`: whether the event belongs to player two
-- `down`: `true` for press and `false` for release
+Open the Geode save directory for this mod. Replay exports are stored in its `replays` subdirectory; the completion index is `completions.csv`.
 
-## Integrity and categories
+## Build and verification
 
-- Every export is labelled `unverified` by default.
-- Practice and editor/test flags are stored separately.
-- The mod does not currently claim to detect active Mega Hack, QOLMod, Eclipse, external speedhacks, noclip, or memory edits comprehensively.
-- Merely having another mod installed is not proof that a run was modified.
-- Until reliable signals are implemented and tested, the mod must not label a run `legitimate`.
-
-The panel lists the intended run categories: From Zero, Startpos, Noclip Death, Noclip Accuracy, and Speedhack. Automatic classification for all of those categories is not yet implemented.
-
-## Build
-
-GitHub Actions builds Windows and Android packages with the Geode SDK and uploads each `.geode` package as a workflow artifact.
+GitHub Actions builds Android 64-bit and Windows packages using the Geode SDK. The workflow also checks that the packaged mod metadata targets Geometry Dash 2.2081. A successful CI build confirms compilation and packaging, not that every hook behaves correctly at runtime.
