@@ -110,6 +110,22 @@ namespace gmp {
         return count;
     }
 
+    static std::size_t countLevelExports(int levelID) {
+        if (levelID <= 0) return 0;
+        auto historyPath = Mod::get()->getSaveDir() / "completions.csv";
+        std::ifstream history(historyPath.string());
+        std::string line;
+        auto wanted = std::to_string(levelID);
+        std::size_t count = 0;
+        while (std::getline(history, line)) {
+            auto comma = line.find(',');
+            if (comma != std::string::npos && line.substr(0, comma) == wanted) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     static bool writeReplay() {
         auto& r = recorder();
         if (!r.active || r.replayPlayback || r.levelID <= 0) return false;
@@ -258,11 +274,19 @@ protected:
         levelID->setPosition({150.f, 52.f});
         m_mainLayer->addChild(levelID);
 
-        auto exportCount = CCLabelBMFont::create(
-            ("Saved exports: " + std::to_string(gmp::countReplayExports())).c_str(),
+        auto levelExports = CCLabelBMFont::create(
+            ("Exports for this level: " + std::to_string(
+                gmp::countLevelExports(level ? level->m_levelID.value() : 0))).c_str(),
             "chatFont.fnt");
-        exportCount->setScale(0.36f);
-        exportCount->setPosition({150.f, 30.f});
+        levelExports->setScale(0.34f);
+        levelExports->setPosition({150.f, 30.f});
+        m_mainLayer->addChild(levelExports);
+
+        auto exportCount = CCLabelBMFont::create(
+            ("All saved exports: " + std::to_string(gmp::countReplayExports())).c_str(),
+            "chatFont.fnt");
+        exportCount->setScale(0.34f);
+        exportCount->setPosition({150.f, 12.f});
         m_mainLayer->addChild(exportCount);
         return true;
     }
