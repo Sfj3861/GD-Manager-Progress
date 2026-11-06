@@ -30,8 +30,12 @@ namespace gmp {
         bool testMode = false;
         bool replayPlayback = false;
         bool active = false;
+        std::uint64_t droppedEvents = 0;
         std::vector<InputEvent> events;
     };
+
+    // Keep long sessions from growing the in-memory event buffer without bound.
+    static constexpr std::size_t MAX_RECORDED_EVENTS = 250000;
 
     static Recorder& recorder() {
         static Recorder value;
@@ -84,6 +88,10 @@ namespace gmp {
         auto* play = PlayLayer::get();
         if (!play || static_cast<GJBaseGameLayer*>(play) != layer) return;
         if (play->m_isPaused || play->m_hasCompletedLevel) return;
+        if (r.events.size() >= MAX_RECORDED_EVENTS) {
+            ++r.droppedEvents;
+            return;
+        }
         r.events.push_back({ currentFrame(layer), button, player2, down });
     }
 
@@ -102,6 +110,8 @@ namespace gmp {
             now.time_since_epoch()).count();
         auto stampMs = std::chrono::duration_cast<std::chrono::milliseconds>(
             now.time_since_epoch()).count();
+        auto* play = PlayLayer::get();
+        auto endFrame = currentFrame(play);
         static std::uint64_t sequence = 0;
         auto filename = std::to_string(r.levelID) + "_" + std::to_string(stampMs)
             + "_" + std::to_string(++sequence) + ".gdr2";
@@ -115,12 +125,17 @@ namespace gmp {
             << "  \"levelId\": " << r.levelID << ",\n"
             << "  \"levelName\": \"" << jsonEscape(r.levelName) << "\",\n"
             << "  \"completion\": 100,\n"
+            << "  \"completedAtUnixMs\": " << stampMs << ",\n"
+            << "  \"endFrameEstimate\": " << endFrame << ",\n"
             << "  \"startPercent\": " << r.startPercent << ",\n"
             << "  \"attempt\": " << r.attempt << ",\n"
             << "  \"mode\": \"" << (r.practice ? "practice" : "normal") << "\",\n"
             << "  \"testMode\": " << (r.testMode ? "true" : "false") << ",\n"
             << "  \"integrity\": \"unverified\",\n"
             << "  \"integrityReason\": \"External tools and gameplay modifications are not comprehensively detectable\",\n"
+            << "  \"inputEventLimit\": " << MAX_RECORDED_EVENTS << ",\n"
+            << "  \"droppedInputEvents\": " << r.droppedEvents << ",\n"
+            << "  \"inputCaptureTruncated\": " << (r.droppedEvents > 0 ? "true" : "false") << ",\n"
             << "  \"inputs\": [";
         for (size_t i = 0; i < r.events.size(); ++i) {
             auto const& e = r.events[i];
@@ -142,8 +157,14 @@ namespace gmp {
         auto historyPath = Mod::get()->getSaveDir() / "completions.csv";
         std::ofstream history(historyPath.string(), std::ios::app);
         if (history) {
+            if (history.peek() == std::ifstream::traits_type::eof()) {
+                history << "level_id,completion,mode,integrity,timestamp_unix_s,input_events,dropped_events\n";
+            }
             history << r.levelID << ",100," << (r.practice ? "practice" : "normal")
-                    << ",unverified," << stamp << "," << r.events.size() << "\n";
+                    << ",unverified," << stamp << "," << r.events.size()
+                    << "," << r.droppedEvents << "\n";
+        } else {
+            log::warn("Could not append completion index: {}", historyPath.string());
         }
         log::info("Saved unverified GDR2 input export: {}", path.string());
         return true;
