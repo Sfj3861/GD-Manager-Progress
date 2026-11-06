@@ -8,7 +8,7 @@
   },
   "id": "sfj3861.gd-manager-progress",
   "name": "GD Manager Progress",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "developer": "Sfj3861",
-  "description": "<cg>ENG:</c> Track your Geometry Dash progress and record gameplay inputs. Export completion attempts as GDR2 event files and review their integrity status. All exports are marked as unverified until integrity checks are implemented.\n\n<cy>ESP:</c> Registra tu progreso en Geometry Dash y captura las pulsaciones durante las partidas. Exporta los intentos completados como archivos de eventos GDR2 y consulta su estado de integridad. Todas las grabaciones se marcan como no verificadas hasta que se implementen comprobaciones de integridad."
+  "description": "<cg>ENG:</c> Records basic gameplay input events and exports completed attempts as JSON-based GDR2 event files. Exports include timestamps, estimated frame metadata, capture limits, and integrity warnings. Runs remain unverified; this mod does not yet detect all modified-run categories.\n\n<cy>ESP:</c> Registra eventos básicos de entrada y exporta intentos completados como archivos de eventos GDR2 basados en JSON. Incluye marcas de tiempo, estimación de fotogramas, límites de captura y avisos de integridad. Las partidas siguen sin verificar; el mod todavía no detecta todas las categorías de partidas modificadas."
 }
