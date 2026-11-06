@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstdint>
 #include <fstream>
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -93,6 +94,20 @@ namespace gmp {
             return;
         }
         r.events.push_back({ currentFrame(layer), button, player2, down });
+    }
+
+    static std::size_t countReplayExports() {
+        auto dir = Mod::get()->getSaveDir() / "replays";
+        std::error_code ec;
+        std::size_t count = 0;
+        std::filesystem::directory_iterator it(dir.string(), ec), end;
+        while (!ec && it != end) {
+            if (it->is_regular_file(ec) && !ec && it->path().extension() == ".gdr2") {
+                ++count;
+            }
+            it.increment(ec);
+        }
+        return count;
     }
 
     static bool writeReplay() {
@@ -232,12 +247,19 @@ protected:
         info->setPosition({150.f, 95.f});
         m_mainLayer->addChild(info);
 
-        auto hint = CCLabelBMFont::create(
-            "Saved in this mod’s Geode save folder / replays",
+        auto levelID = CCLabelBMFont::create(
+            ("Level ID: " + std::to_string(level ? level->m_levelID.value() : 0)).c_str(),
             "chatFont.fnt");
-        hint->setScale(0.34f);
-        hint->setPosition({150.f, 27.f});
-        m_mainLayer->addChild(hint);
+        levelID->setScale(0.36f);
+        levelID->setPosition({150.f, 52.f});
+        m_mainLayer->addChild(levelID);
+
+        auto exportCount = CCLabelBMFont::create(
+            ("Saved exports: " + std::to_string(gmp::countReplayExports())).c_str(),
+            "chatFont.fnt");
+        exportCount->setScale(0.36f);
+        exportCount->setPosition({150.f, 30.f});
+        m_mainLayer->addChild(exportCount);
         return true;
     }
 
