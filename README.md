@@ -5,7 +5,7 @@ Native Geode mod for Geometry Dash 2.2081 (Android 64-bit and Windows).
 ## Current functionality
 
 - Adds a left-arrow entry point to the Level Info screen.
-- The panel displays the selected level ID and the number of saved replay exports.
+- The panel displays the selected level ID, exports for that level, and the total saved export count.
 - Captures gameplay button press and release events, including button ID and player slot.
 - Resets the event buffer for a new attempt and excludes replay playback.
 - Exports a JSON event file with the `.gdr2` extension when the game reports level completion.
