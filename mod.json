@@ -8,7 +8,7 @@
   },
   "id": "sfj3861.gd-manager-progress",
   "name": "GD Manager Progress",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "developer": "Sfj3861",
   "description": "<cg>ENG:</c> Records basic gameplay input events and exports completed attempts as JSON-based GDR2 event files. Exports include timestamps, estimated frame metadata, capture limits, and integrity warnings. Runs remain unverified; this mod does not yet detect all modified-run categories.\n\n<cy>ESP:</c> Registra eventos básicos de entrada y exporta intentos completados como archivos de eventos GDR2 basados en JSON. Incluye marcas de tiempo, estimación de fotogramas, límites de captura y avisos de integridad. Las partidas siguen sin verificar; el mod todavía no detecta todas las categorías de partidas modificadas."
 }
