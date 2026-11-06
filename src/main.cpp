@@ -170,9 +170,13 @@ namespace gmp {
         }
 
         auto historyPath = Mod::get()->getSaveDir() / "completions.csv";
+        std::ifstream existingHistory(historyPath.string(), std::ios::binary | std::ios::ate);
+        bool needsHistoryHeader = !existingHistory || existingHistory.tellg() == 0;
+        existingHistory.close();
+
         std::ofstream history(historyPath.string(), std::ios::app);
         if (history) {
-            if (history.peek() == std::ifstream::traits_type::eof()) {
+            if (needsHistoryHeader) {
                 history << "level_id,completion,mode,integrity,timestamp_unix_s,input_events,dropped_events\n";
             }
             history << r.levelID << ",100," << (r.practice ? "practice" : "normal")
